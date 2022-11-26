@@ -100,6 +100,15 @@ public class StudentController{
         studentService.deleteStudent(studentId);
     }
 
+    @PutMapping(path = "{studentId}")
+    public void updateStudent(
+        @PathVariable("studentId")Long studentId,
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) String email
+    ){
+        studentService.updateStudent(studentId,name,email);
+    }
+
 }
 ```
 
@@ -140,6 +149,31 @@ public class StudentService{
        }
        studentRepository.deleteById(studentId);
     }
+
+    @Transactional
+    public void updateStudent(Long studentId,
+                              String name ,
+                              String email){
+
+                                StudentEntity student = studentRepository.findById(studentId)
+                                .orElseThrow() -> new IllegalStateException("Does not exist");
+
+                                if(name != null &&
+                                name.length() > 0 &&
+                                !Objects.equals(student.getName(),name)){
+                                    student.setName(name);
+                                }
+
+                                 if(email != null &&
+                                email.length() > 0 &&
+                                !Objects.equals(student.getEmail(),email)){
+                                    Optional <StudentEntity> studentOptional = studentRepository.findStudentEntityByEmail(email);
+                                    if(studentOptional.isPresent()){
+                                        throw new IllegalStateException("email taken");
+                                    }
+                                    student.setEmail(email);
+                                }
+                              }
 }
 
 ```
