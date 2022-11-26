@@ -16,6 +16,7 @@ Ejemplo creacion de modelo/entidad para crear API :
 
 ```java
 //Primera hibernate la segunda para la base de datos
+//Siempre importa java persistence
 @Entity
 @Table
 public class StundentEntity{
@@ -34,6 +35,7 @@ public class StundentEntity{
     private String name;
     private String email;
     private Localdate dateOfBirth;
+    @Transient //No necesita ser una columna en nuestra db eso hace transient
     private Integer age;
 
     //Creamos 3 Constructores ...
@@ -42,21 +44,25 @@ public class StundentEntity{
 
     }
 
-     public StudentEntity(Long id,String name,String email,Localdate dateOfBirth,Integer age){
+     public StudentEntity(Long id,String name,String email,Localdate dateOfBirth){
         this.id = id;
         this.name = name;
         this.email = email;
         this.dateOfBirth = dateOfBirth;
-        this.age = age;
+       // this.age = age;
     }
     //Uno sin id porque la base de datos lo autogenera con autoadd en SQL
-     public StudentEntity(String name,String email,Localdate dateOfBirth,Integer age){
+     public StudentEntity(String name,String email,Localdate dateOfBirth){
         this.name = name;
         this.email = email;
         this.dateOfBirth = dateOfBirth;
-        this.age = age;
+       // this.age = age;
     }
     //Generamos Getters y Setters ademas un ToString y tenemos StudentEntity ...
+
+    public Integer getAge(){
+        return Period.between(this.dateOfBirth,LocalDate.now()).getYears();
+    }
 }
 
 ```
@@ -81,8 +87,13 @@ public class StudentController{
     //Mostrara el codigo siguiente
     @GetMapping
     public List<StudentEntity> getStudent(){
-   
+        return studentService.getStudent();
     };
+
+    @PostMapping
+    public void registerNewStudent (@RequestBody StudentEntity student){
+        studentService.addNewStudent(student);
+    }
 
 }
 ```
@@ -102,10 +113,18 @@ public class StudentService{
         this.studentRepository = studentRepository;
     }
 
-    @GetMapping
     public List<StudentEntity> getStudent(){
         return studentRepository.findAll();
     //findAll lo saca de JpaRepository ...
+    }
+
+    public void addNewStudent (StudentEntity student){
+        Optional <StudentEntity> studentOptional = studentRepository.findStudentEntityByEmail(student.getEmail());
+
+        if(studentOptional.isPresent()){
+            throw new IllegalStateException("Email taken");
+        }
+        studentRepository.save(student);
     }
 }
 
@@ -119,6 +138,9 @@ Por ultimo creamos el StudentRepository
 @Repository
 public interface StudentRepository extends JpaRepository <StudentEntity,Long>{
 
+//Query mas complicada
+    @Query("SELECT s FROM StudentEntity s Where s.email =  ?1")
+    Optional <StudentEntity> findStudentEntityByEmail(String email);
 }
 
 ```
