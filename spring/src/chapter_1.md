@@ -95,6 +95,11 @@ public class StudentController{
         studentService.addNewStudent(student);
     }
 
+    @DeleteMapping(path = "{studentId}")
+    public void deleteStudent(@PathVariable("studentId")Long studentId){
+        studentService.deleteStudent(studentId);
+    }
+
 }
 ```
 
@@ -125,6 +130,15 @@ public class StudentService{
             throw new IllegalStateException("Email taken");
         }
         studentRepository.save(student);
+    }
+
+    public void deleteStudent(Long studentId){
+       boolean exists = studentRepository.existById(studentId);
+
+       if(!exists){
+        throw new IllegalStateException("Student with id " + studentId "does not exist");
+       }
+       studentRepository.deleteById(studentId);
     }
 }
 
