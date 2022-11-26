@@ -192,3 +192,10 @@ public interface StudentRepository extends JpaRepository <StudentEntity,Long>{
 }
 
 ```
+
+Maven 
+
+clean destruye target 
+
+Install mete dependencias 
+
